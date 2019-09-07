@@ -9,3 +9,5 @@ Click photo for a quick demo.
 
 I added scrolling text and changed the code so the morphing of all digits animate on the same time. There's also a web interface where you can change the scrolling text and the color of the edge and scrolling text. Change color the digits is not yet working.
 Scrolling text can have [DDD], [DDDD], [MMM], [MMMM] and [DATUM]. All date strings are in Dutch.
+
+Code is not yet optimized and still contains debugging code. 
