@@ -19,7 +19,7 @@ int brightness = 50;
 //Scrolltext 
 #include <Fonts/kongtext4pt7b.h>
 #define SCROLLYPOS 9 //y position of the scrolltext
-#define CHARACTERWIDTH 8 //width of the characters in the font
+#define CHARACTERWIDTH 8 //width of the characters in the font, needed to calculate the length of the string
 int scrollXpos=64; //current x position of the scrolltext
 
 #include <Fonts/TomThumb.h>
@@ -44,10 +44,10 @@ long lastcheckedtime = 0;
 long scrolltextTimer = 0;
 long TimeUpdaterTimer = 0;
 bool UpdateTime=true;
-String maand[] = {"januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"};
-String maandkort[] = {"jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"};
-String dag[] = {"zondag", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag"};
-String dagkort[] = {"zo", "ma", "di", "wo", "do", "vr", "za"};
+String strMonth[] = {"januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"};
+String strMonthShort[] = {"jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"};
+String strDay[] = {"zondag", "strMonthag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag"};
+String strDayShort[] = {"zo", "ma", "di", "wo", "do", "vr", "za"};
 
 #ifdef ESP32
   #define P_LAT 22
@@ -118,7 +118,7 @@ void checkMorph(){
   if (millis()-checkmorphTimer>MORPHDELAY)
   {
     Serial.print("checkmorphTimer: ");
-    Serial.print(millis()-checkmorphTimer);
+    Serial.println(millis()-checkmorphTimer);
         
     if (digit0.doMorph()) digit0.MorphDigit();
     if (digit1.doMorph()) digit1.MorphDigit();
@@ -255,7 +255,12 @@ void setup() {
   timeUpdate();
   readData();
   formatScrollText();
-  //settime();
+  while(!timeClient.update())
+  {
+    display.setCursor(2,12);
+    display.println("Getting time");
+  }
+  settime();
 
 }
 
@@ -270,14 +275,14 @@ void scroll_text()
   if(millis()-scrolltextTimer>SCROLLTEXTDELAY)
   {
     Serial.print("scroll_text: ");
-    Serial.print(millis()-scrolltextTimer);
+    Serial.println(millis()-scrolltextTimer);
     
     display.setTextWrap(false); 
     display.setFont(&kongtext4pt7b);
     display.setTextColor(ScrollColor);
     display.setCursor(scrollXpos--,SCROLLYPOS);
     display.fillRect(1, 1, 64, 10, display.color565(0, 0, 0)); //empty the scroll text bar
-    display.println(ScrollText);
+    display.print(ScrollText);
     int minpos=0-(ScrollText.length()*CHARACTERWIDTH);
     if (scrollXpos<minpos) scrollXpos=64; //reset xposition when text scrolled to left.
     display.setFont();
@@ -292,7 +297,7 @@ void updateDigits()
   if(millis()-lastcheckedtime>1000)
   {
     Serial.print("updateDigits: ");
-    Serial.print(millis()-lastcheckedtime);
+    Serial.println(millis()-lastcheckedtime);
     
     int ss = second();
     int mm = minute();
@@ -363,7 +368,7 @@ void timeUpdate(){
   if ((millis()-TimeUpdaterTimer>3600000)||UpdateTime)
   {
     Serial.print("Timeupdater: ");
-    Serial.print(millis()-TimeUpdaterTimer);
+    Serial.println(millis()-TimeUpdaterTimer);
     UpdateTime = !timeClient.update();
     Serial.println(UpdateTime);
     TimeUpdaterTimer = millis();
@@ -384,33 +389,33 @@ void readData(){
 
 void formatScrollText()
 {
-  if(ScrollText.indexOf("[datum]")>=0){
-    ScrollText.replace("[datum]", String(day()) + " " + maand[month()-1] + " " +  String(year()));
+  if(ScrollText.indexOf("[date]")>=0){
+    ScrollText.replace("[date]", String(day()) + " " + strMonth[month()-1] + " " +  String(year()));
   }
   if(ScrollText.indexOf("[MMMM]")>=0){
-    ScrollText.replace("[MMMM]", maand[month()-1]);
+    ScrollText.replace("[MMMM]", strMonth[month()-1]);
   }
   if(ScrollText.indexOf("[MMM]")>=0){
-    ScrollText.replace("[MMM]", maandkort[month()-1]);
+    ScrollText.replace("[MMM]", strMonthShort[month()-1]);
   }
   if(ScrollText.indexOf("[DDDD]")>=0){
-    ScrollText.replace("[DDDD]", dag[day()-1]);
+    ScrollText.replace("[DDDD]", strDay[day()-1]);
   }
   if(ScrollText.indexOf("[DDD]")>=0){
-    ScrollText.replace("[DDD]", dagkort[day()-1]);
+    ScrollText.replace("[DDD]", strDayShort[day()-1]);
   }
-  if(ScrollText.indexOf("[groet]")>=0){
+  if(ScrollText.indexOf("[greeting]")>=0){
     if(hour()>=18){
-       ScrollText.replace("[groet]", "Goedenavond");      
+       ScrollText.replace("[greeting]", "Goedenavond");      
     }   
     if(hour()>=12){
-       ScrollText.replace("[groet]", "Goedemiddag");      
+       ScrollText.replace("[greeting]", "Goedemiddag");      
     }      
     if(hour()>=6){
-       ScrollText.replace("[groet]", "Goedemorgen");      
+       ScrollText.replace("[greeting]", "Goedemorgen");      
     }
     if(hour()>=0){
-       ScrollText.replace("[groet]", "Goedenacht");      
+       ScrollText.replace("[greeting]", "Goedenacht");      
     }
   }
 }
